@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Same Wave — LAN Chat</title>
+<style>
+  :root {
+    --bg: #12181a;
+    --panel: #182022;
+    --line: #263133;
+    --text: #e9efee;
+    --muted: #7c9490;
+    --accent: #6ee7c5;
+    --accent-dim: #2f4a44;
+    --system: #b8946a;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 720px;
+    margin: 0 auto;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+  }
+
+  /* ---- Join screen ---- */
+  #joinScreen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 24px;
+    text-align: center;
+  }
+  .pulse-wrap {
+    position: relative;
+    width: 84px;
+    height: 84px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pulse-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    z-index: 2;
+  }
+  .pulse-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid var(--accent);
+    opacity: 0;
+    animation: pulse 2.4s ease-out infinite;
+  }
+  .pulse-ring:nth-child(2) { animation-delay: 0.8s; }
+  .pulse-ring:nth-child(3) { animation-delay: 1.6s; }
+  @keyframes pulse {
+    0% { width: 14px; height: 14px; opacity: 0.6; }
+    100% { width: 84px; height: 84px; opacity: 0; }
+  }
+  h1 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin: 0;
+  }
+  .tagline {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-top: -12px;
+  }
+  #nameInput {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 1rem;
+    width: 260px;
+    outline: none;
+  }
+  #nameInput:focus { border-color: var(--accent); }
+  #joinBtn {
+    background: var(--accent);
+    color: #0c1414;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+  #joinBtn:hover { opacity: 0.9; }
+
+  /* ---- Chat screen ---- */
+  #chatScreen { display: none; flex-direction: column; height: 100%; }
+  header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header .title { font-weight: 600; font-size: 0.95rem; }
+  header .who { color: var(--muted); font-size: 0.78rem; margin-top: 2px; }
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .msg { display: flex; flex-direction: column; max-width: 78%; }
+  .msg .meta { font-size: 0.72rem; color: var(--muted); margin-bottom: 3px; }
+  .msg .bubble {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    border-radius: 10px;
+    line-height: 1.4;
+    font-size: 0.92rem;
+    word-wrap: break-word;
+  }
+  .msg.mine { align-self: flex-end; }
+  .msg.mine .bubble { background: var(--accent-dim); border-color: var(--accent); }
+  .msg.mine .meta { text-align: right; }
+  .system-line {
+    align-self: center;
+    color: var(--system);
+    font-size: 0.75rem;
+    padding: 2px 10px;
+    opacity: 0.85;
+  }
+  #typingLine {
+    height: 18px;
+    padding: 0 18px;
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-style: italic;
+  }
+  #inputBar {
+    display: flex;
+    gap: 8px;
+    padding: 14px 18px;
+    border-top: 1px solid var(--line);
+  }
+  #msgInput {
+    flex: 1;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 8px;
+    outline: none;
+    font-size: 0.95rem;
+  }
+  #msgInput:focus { border-color: var(--accent); }
+  #sendBtn {
+    background: var(--accent);
+    color: #0c1414;
+    border: none;
+    padding: 0 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="joinScreen">
+    <div class="pulse-wrap">
+      <div class="pulse-ring"></div>
+      <div class="pulse-ring"></div>
+      <div class="pulse-ring"></div>
+      <div class="pulse-dot"></div>
+    </div>
+    <h1>Same Wave</h1>
+    <div class="tagline">Everyone on this WiFi, one chat.</div>
+    <input id="nameInput" type="text" placeholder="What should we call you?" maxlength="20" />
+    <button id="joinBtn">Join the chat</button>
+  </div>
+
+  <div id="chatScreen">
+    <header>
+      <div>
+        <div class="title">Same Wave</div>
+        <div class="who" id="whoLine">Connected</div>
+      </div>
+    </header>
+    <div id="messages"></div>
+    <div id="typingLine"></div>
+    <div id="inputBar">
+      <input id="msgInput" type="text" placeholder="Type a message..." autocomplete="off" />
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+  let myName = "";
+
+  const joinScreen = document.getElementById("joinScreen");
+  const chatScreen = document.getElementById("chatScreen");
+  const nameInput = document.getElementById("nameInput");
+  const joinBtn = document.getElementById("joinBtn");
+  const messages = document.getElementById("messages");
+  const msgInput = document.getElementById("msgInput");
+  const sendBtn = document.getElementById("sendBtn");
+  const whoLine = document.getElementById("whoLine");
+  const typingLine = document.getElementById("typingLine");
+
+  function joinChat() {
+    const name = nameInput.value.trim();
+    if (!name) return;
+    myName = name;
+    socket.emit("join", name);
+    joinScreen.style.display = "none";
+    chatScreen.style.display = "flex";
+    msgInput.focus();
+  }
+
+  joinBtn.addEventListener("click", joinChat);
+  nameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") joinChat(); });
+
+  function addSystemLine(text) {
+    const el = document.createElement("div");
+    el.className = "system-line";
+    el.textContent = text;
+    messages.appendChild(el);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function addMessage({ username, text, time }) {
+    const wrap = document.createElement("div");
+    wrap.className = "msg" + (username === myName ? " mine" : "");
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = `${username} · ${time}`;
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+    wrap.appendChild(meta);
+    wrap.appendChild(bubble);
+    messages.appendChild(wrap);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function sendMessage() {
+    const text = msgInput.value.trim();
+    if (!text) return;
+    socket.emit("chatMessage", text);
+    msgInput.value = "";
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+  msgInput.addEventListener("keydown", (e) => { if (e.key === "Enter") sendMessage(); });
+
+  let typingTimeout;
+  msgInput.addEventListener("input", () => {
+    socket.emit("typing");
+  });
+
+  socket.on("chatMessage", addMessage);
+  socket.on("system", addSystemLine);
+  socket.on("userList", (list) => {
+    whoLine.textContent = list.length === 1
+      ? "Just you so far"
+      : `${list.length} people connected: ${list.join(", ")}`;
+  });
+  socket.on("typing", (username) => {
+    typingLine.textContent = `${username} is typing...`;
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => { typingLine.textContent = ""; }, 1500);
+  });
+</script>
+</body>
+</html>
