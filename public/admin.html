@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Same Wave — Admin</title>
+<style>
+  :root { --bg:#12181a; --panel:#182022; --panel2:#1c2528; --line:#263133; --text:#e9efee; --muted:#7c9490; --accent:#6ee7c5; --danger:#e77a6e; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; }
+  #loginBox { max-width:320px; margin:80px auto; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:24px; display:flex; flex-direction:column; gap:10px; }
+  #loginBox input { background:var(--panel2); border:1px solid var(--line); color:var(--text); padding:10px; border-radius:8px; outline:none; }
+  #loginBox button { background:var(--accent); color:#0c1414; border:none; padding:10px; border-radius:8px; font-weight:600; cursor:pointer; }
+  #loginError { color:var(--danger); font-size:0.85rem; min-height:1em; }
+
+  #adminApp { display:none; max-width:1000px; margin:0 auto; padding:20px; }
+  h1 { font-size:1.3rem; margin-bottom:4px; }
+  .sub { color:var(--muted); font-size:0.85rem; margin-bottom:20px; }
+  .tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .tabs button { background:var(--panel); border:1px solid var(--line); color:var(--muted); padding:8px 14px; border-radius:8px; cursor:pointer; font-size:0.85rem; }
+  .tabs button.active { background:var(--accent); color:#0c1414; border-color:var(--accent); }
+  table { width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  th, td { text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); font-size:0.85rem; }
+  th { color:var(--muted); font-weight:600; text-transform:uppercase; font-size:0.72rem; letter-spacing:0.04em; }
+  tr:last-child td { border-bottom:none; }
+  tr.clickable { cursor:pointer; }
+  tr.clickable:hover { background:var(--panel2); }
+  #detailView { margin-top:16px; }
+  #detailView h3 { font-size:0.95rem; margin-bottom:10px; }
+  .backBtn { background:none; border:1px solid var(--line); color:var(--muted); padding:6px 12px; border-radius:6px; cursor:pointer; margin-bottom:14px; font-size:0.8rem; }
+  .msgRow { padding:8px 12px; border-bottom:1px solid var(--line); font-size:0.87rem; }
+  .msgRow .who { color:var(--accent); font-weight:600; margin-right:6px; }
+  .msgRow .time { color:var(--muted); font-size:0.75rem; float:right; }
+  .empty { color:var(--muted); padding:20px; text-align:center; font-size:0.85rem; }
+</style>
+</head>
+<body>
+
+<div id="loginBox">
+  <h1 style="margin:0 0 4px">Admin Login</h1>
+  <div class="sub" style="margin:0 0 10px">Restricted to the admin account only.</div>
+  <input id="u" type="text" placeholder="Username" />
+  <input id="p" type="password" placeholder="Password" />
+  <button id="loginGo">Log in</button>
+  <div id="loginError"></div>
+</div>
+
+<div id="adminApp">
+  <h1>Same Wave — Admin Panel</h1>
+  <div class="sub">Viewing all users, public log, DMs, and group rooms.</div>
+  <div class="tabs">
+    <button id="tabUsers" class="active">Users</button>
+    <button id="tabPublic">Public Room Log</button>
+    <button id="tabDms">DM Threads</button>
+    <button id="tabRooms">Group Rooms</button>
+  </div>
+  <div id="listView"></div>
+  <div id="detailView"></div>
+</div>
+
+<script>
+  let token = localStorage.getItem("sw_token") || "";
+  const loginBox = document.getElementById("loginBox");
+  const adminApp = document.getElementById("adminApp");
+  const loginError = document.getElementById("loginError");
+
+  document.getElementById("loginGo").addEventListener("click", async () => {
+    const username = document.getElementById("u").value.trim();
+    const password = document.getElementById("p").value;
+    try {
+      const res = await fetch("/api/login", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({username, password}) });
+      const data = await res.json();
+      if (!res.ok) { loginError.textContent = data.error || "Login failed"; return; }
+      token = data.token;
+      localStorage.setItem("sw_token", token);
+      boot();
+    } catch (e) { loginError.textContent = "Could not reach server."; }
+  });
+
+  async function api(path) {
+    const res = await fetch(path, { headers: { "Authorization": "Bearer " + token } });
+    if (res.status === 403) { loginError.textContent = "This account is not the admin account."; loginBox.style.display="block"; adminApp.style.display="none"; return null; }
+    if (res.status === 401) { localStorage.removeItem("sw_token"); location.reload(); return null; }
+    return res.json();
+  }
+
+  async function boot() {
+    const me = await fetch("/api/me", { headers: { "Authorization": "Bearer " + token } });
+    if (me.status !== 200) return;
+    const test = await api("/api/admin/users");
+    if (!test) return;
+    loginBox.style.display = "none";
+    adminApp.style.display = "block";
+    showUsers();
+  }
+
+  function setActiveTab(id) {
+    document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  }
+
+  document.getElementById("tabUsers").addEventListener("click", showUsers);
+  document.getElementById("tabPublic").addEventListener("click", showPublic);
+  document.getElementById("tabDms").addEventListener("click", showDms);
+  document.getElementById("tabRooms").addEventListener("click", showRooms);
+
+  function fmt(ts) { return new Date(ts).toLocaleString(); }
+
+  async function showUsers() {
+    setActiveTab("tabUsers");
+    document.getElementById("detailView").innerHTML = "";
+    const users = await api("/api/admin/users");
+    const rows = (users || []).map(u => `<tr><td>${u.username}</td><td>${fmt(u.createdAt)}</td></tr>`).join("");
+    document.getElementById("listView").innerHTML = `
+      <table><thead><tr><th>Username</th><th>Joined</th></tr></thead><tbody>${rows || ""}</tbody></table>
+      ${!users || !users.length ? '<div class="empty">No users yet.</div>' : ""}`;
+  }
+
+  async function showPublic() {
+    setActiveTab("tabPublic");
+    document.getElementById("listView").innerHTML = "";
+    const msgs = await api("/api/admin/public-messages");
+    renderMessageLog("Public Room — full log", msgs || [], m => m.username);
+  }
+
+  async function showDms() {
+    setActiveTab("tabDms");
+    document.getElementById("detailView").innerHTML = "";
+    const pairs = await api("/api/admin/dms");
+    const rows = (pairs || []).map(p => `<tr class="clickable" data-a="${p.a}" data-b="${p.b}"><td>${p.a} ↔ ${p.b}</td><td>${p.count} messages</td><td>${p.lastAt || "-"}</td></tr>`).join("");
+    document.getElementById("listView").innerHTML = `
+      <table><thead><tr><th>Conversation</th><th>Messages</th><th>Last Activity</th></tr></thead><tbody>${rows}</tbody></table>
+      ${!pairs || !pairs.length ? '<div class="empty">No DM conversations yet.</div>' : ""}`;
+    document.querySelectorAll("#listView tr.clickable").forEach(tr => {
+      tr.addEventListener("click", async () => {
+        const a = tr.dataset.a, b = tr.dataset.b;
+        const msgs = await api(`/api/admin/dm/${encodeURIComponent(a)}/${encodeURIComponent(b)}`);
+        renderMessageLog(`DM: ${a} ↔ ${b}`, msgs || [], m => m.from, true);
+      });
+    });
+  }
+
+  async function showRooms() {
+    setActiveTab("tabRooms");
+    document.getElementById("detailView").innerHTML = "";
+    const rooms = await api("/api/admin/rooms");
+    const rows = (rooms || []).map(r => `<tr class="clickable" data-id="${r.id}" data-name="${r.name}"><td>${r.name}</td><td>${r.members.join(", ")}</td><td>${r.createdBy}</td></tr>`).join("");
+    document.getElementById("listView").innerHTML = `
+      <table><thead><tr><th>Room</th><th>Members</th><th>Created By</th></tr></thead><tbody>${rows}</tbody></table>
+      ${!rooms || !rooms.length ? '<div class="empty">No group rooms yet.</div>' : ""}`;
+    document.querySelectorAll("#listView tr.clickable").forEach(tr => {
+      tr.addEventListener("click", async () => {
+        const id = tr.dataset.id, name = tr.dataset.name;
+        const msgs = await api(`/api/admin/rooms/${id}/messages`);
+        renderMessageLog(`Room: ${name}`, msgs || [], m => m.from, true);
+      });
+    });
+  }
+
+  function renderMessageLog(title, msgs, whoFn, showBack) {
+    const html = [];
+    if (showBack) html.push(`<button class="backBtn" id="backBtn">← Back</button>`);
+    html.push(`<h3>${title}</h3>`);
+    if (!msgs.length) {
+      html.push(`<div class="empty">No messages yet.</div>`);
+    } else {
+      html.push(`<div>`);
+      msgs.forEach(m => {
+        html.push(`<div class="msgRow"><span class="time">${m.time}</span><span class="who">${whoFn(m)}</span>${escapeHtml(m.text)}</div>`);
+      });
+      html.push(`</div>`);
+    }
+    if (showBack) {
+      document.getElementById("listView").style.display = "none";
+      document.getElementById("detailView").innerHTML = html.join("");
+      document.getElementById("backBtn").addEventListener("click", () => {
+        document.getElementById("listView").style.display = "block";
+        document.getElementById("detailView").innerHTML = "";
+      });
+    } else {
+      document.getElementById("detailView").innerHTML = html.join("");
+    }
+  }
+
+  function escapeHtml(s) {
+    const div = document.createElement("div");
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  if (token) boot();
+</script>
+</body>
+</html>
