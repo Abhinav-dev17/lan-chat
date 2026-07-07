@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Same Wave — Admin</title>
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<div id="loginBox">
+  <div class="logoMark">S</div>
+  <h1 style="margin:0 0 4px; font-size:1.2rem; text-align:center;">Admin Login</h1>
+  <div class="sub" style="margin:0 0 6px; text-align:center;">Restricted to the admin account only.</div>
+  <input id="u" type="text" placeholder="Username" />
+  <input id="p" type="password" placeholder="Password" />
+  <button id="loginGo">Log in</button>
+  <div id="loginError"></div>
+</div>
+
+<div id="adminApp">
+  <div class="adminTopBar">
+    <div class="logoMark">S</div>
+    <div>
+      <h1>Same Wave — Admin Panel</h1>
+      <div class="sub">Viewing all users, public log, DMs, and group rooms.</div>
+    </div>
+  </div>
+  <div class="tabs">
+    <button id="tabUsers" class="active">Users</button>
+    <button id="tabPublic">Public Room Log</button>
+    <button id="tabDms">DM Threads</button>
+    <button id="tabRooms">Group Rooms</button>
+  </div>
+  <div id="listView"></div>
+  <div id="detailView"></div>
+</div>
+
+<script src="js/avatar.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
