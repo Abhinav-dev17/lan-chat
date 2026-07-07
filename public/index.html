@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Same Wave — Chat</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="authScreen">
+  <div class="logoMark">S</div>
+  <h1>Same Wave</h1>
+  <div class="tagline">Public room, private DMs, group chats.</div>
+  <div class="authBox">
+    <div class="authTabs">
+      <button id="tabLogin" class="active">Log in</button>
+      <button id="tabRegister">Register</button>
+    </div>
+    <input id="authUsername" type="text" placeholder="Username" maxlength="20" />
+    <input id="authPassword" type="password" placeholder="Password" />
+    <button class="primary" id="authSubmit">Log in</button>
+    <div id="authError"></div>
+  </div>
+</div>
+
+<div id="appScreen">
+  <div class="layout">
+    <div id="sidebarOverlay"></div>
+
+    <div id="rail">
+      <div class="railLogo">S</div>
+      <div class="railBtn active" title="Chats">💬</div>
+      <div class="railBottom">
+        <div id="railAvatar" title="Log out"></div>
+      </div>
+    </div>
+
+    <div id="listCol">
+      <div id="listHeader">
+        <h2>Chats</h2>
+        <button id="newBtn" title="New">+</button>
+      </div>
+      <div id="searchWrap">
+        <span class="searchIcon">🔍</span>
+        <input id="searchInput" type="text" placeholder="Search chats..." />
+      </div>
+      <div id="filterTabs">
+        <button class="active" data-filter="all">All</button>
+        <button data-filter="dm">DMs</button>
+        <button data-filter="room">Groups</button>
+      </div>
+      <div id="chatList"></div>
+    </div>
+
+    <div id="chatArea">
+      <div id="emptyState">
+        <div class="big">🌊</div>
+        <div>Pick a conversation to start chatting</div>
+      </div>
+      <div id="conversationView" style="display:none; flex-direction:column; height:100%;">
+        <div id="chatHeader">
+          <button id="menuBtn">☰</button>
+          <div class="avatar" id="headerAvatar"></div>
+          <div class="htext">
+            <div class="hname" id="chatHeaderName">—</div>
+            <div class="hsub" id="chatHeaderSub"></div>
+          </div>
+          <button id="infoToggleBtn" title="Info">ⓘ</button>
+        </div>
+        <div id="messages"></div>
+        <div id="inputBar">
+          <input id="msgInput" type="text" placeholder="Type a message..." autocomplete="off" />
+          <button id="sendBtn">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="infoCol" class="hidden">
+      <div class="infoHead">
+        <div class="infoAvatar" id="infoAvatar"></div>
+        <div class="infoName" id="infoName">—</div>
+        <div class="infoSub" id="infoSub"></div>
+      </div>
+      <div class="infoSection" id="infoMembersSection" style="display:none;">
+        <h4>Members</h4>
+        <div id="infoMembersList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New chat modal -->
+<div class="modalOverlay" id="newModal">
+  <div class="modalBox">
+    <div style="font-weight:600; margin-bottom:4px;">Start something new</div>
+    <div class="optionItem" id="optPublic">🌐 &nbsp; Go to Public Room</div>
+    <div class="optionItem" id="optDm">💬 &nbsp; New Direct Message</div>
+    <div class="optionItem" id="optRoom">👥 &nbsp; New Group Room</div>
+    <button class="cancel" data-close="newModal" style="margin-top:6px;">Cancel</button>
+  </div>
+</div>
+
+<!-- New DM modal -->
+<div class="modalOverlay" id="dmModal">
+  <div class="modalBox">
+    <div>Start a DM with:</div>
+    <input id="dmUsernameInput" type="text" placeholder="username" />
+    <div class="row">
+      <button class="cancel" data-close="dmModal">Cancel</button>
+      <button class="primary" id="dmModalGo">Start</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Room modal -->
+<div class="modalOverlay" id="roomModal">
+  <div class="modalBox">
+    <div>Room name:</div>
+    <input id="roomNameInput" type="text" placeholder="e.g. TDS Dev Team" />
+    <div>Members (comma-separated usernames):</div>
+    <input id="roomMembersInput" type="text" placeholder="alice, bob" />
+    <div class="row">
+      <button class="cancel" data-close="roomModal">Cancel</button>
+      <button class="primary" id="roomModalGo">Create</button>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/avatar.js"></script>
+<script src="js/ui-render.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
