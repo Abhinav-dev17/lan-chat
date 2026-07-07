@@ -1,0 +1,59 @@
+:root {
+  --bg: #0d0b14;
+  --panel: #15121f;
+  --panel2: #1c1830;
+  --line: #2a2440;
+  --text: #f0eef7;
+  --muted: #8f87a8;
+  --accent: #7c5cff;
+  --accent-soft: #2c2350;
+  --accent-2: #9b6bff;
+  --danger: #e7666a;
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; }
+input, button { font-family: inherit; }
+
+#loginBox { max-width:320px; margin:100px auto; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:26px; display:flex; flex-direction:column; gap:12px; }
+.logoMark { width: 48px; height: 48px; border-radius: 14px; background: linear-gradient(135deg, var(--accent), var(--accent-2)); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.4rem; color: white; margin: 0 auto 4px; }
+#loginBox input { background:var(--panel2); border:1px solid var(--line); color:var(--text); padding:11px 13px; border-radius:10px; outline:none; }
+#loginBox input:focus { border-color: var(--accent); }
+#loginBox button { background:var(--accent); color:white; border:none; padding:11px; border-radius:10px; font-weight:600; cursor:pointer; }
+#loginBox button:hover { background: var(--accent-2); }
+#loginError { color:var(--danger); font-size:0.85rem; min-height:1em; }
+
+#adminApp { display:none; max-width:1100px; margin:0 auto; padding:28px 24px; }
+.adminTopBar { display:flex; align-items:center; gap:12px; margin-bottom: 22px; }
+.adminTopBar .logoMark { margin: 0; width: 38px; height: 38px; font-size: 1.1rem; border-radius: 11px; }
+.adminTopBar h1 { font-size:1.25rem; margin: 0; }
+.adminTopBar .sub { color:var(--muted); font-size:0.82rem; }
+
+.tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+.tabs button { background:var(--panel); border:1px solid var(--line); color:var(--muted); padding:9px 16px; border-radius:10px; cursor:pointer; font-size:0.85rem; }
+.tabs button:hover { color: var(--text); }
+.tabs button.active { background:var(--accent); color:white; border-color:var(--accent); }
+
+table { width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+th, td { text-align:left; padding:12px 14px; border-bottom:1px solid var(--line); font-size:0.85rem; }
+th { color:var(--muted); font-weight:600; text-transform:uppercase; font-size:0.7rem; letter-spacing:0.05em; }
+tr:last-child td { border-bottom:none; }
+tr.clickable { cursor:pointer; }
+tr.clickable:hover { background:var(--panel2); }
+
+.userCell { display:flex; align-items:center; gap:10px; }
+.miniAvatar { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.7rem; color:white; flex-shrink:0; }
+
+#detailView { margin-top:18px; }
+#detailView h3 { font-size:1rem; margin-bottom:12px; }
+.backBtn { background:var(--panel); border:1px solid var(--line); color:var(--muted); padding:7px 14px; border-radius:8px; cursor:pointer; margin-bottom:16px; font-size:0.8rem; }
+.backBtn:hover { color: var(--text); }
+.msgLog { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.msgRow { padding:10px 14px; border-bottom:1px solid var(--line); font-size:0.87rem; }
+.msgRow:last-child { border-bottom: none; }
+.msgRow .who { color:var(--accent-2); font-weight:600; margin-right:8px; }
+.msgRow .time { color:var(--muted); font-size:0.75rem; float:right; }
+.empty { color:var(--muted); padding:30px; text-align:center; font-size:0.85rem; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+
+.deleteBtn { background:none; border:1px solid var(--danger); color:var(--danger); padding:6px 12px; border-radius:8px; cursor:pointer; font-size:0.78rem; }
+.deleteBtn:hover { background:rgba(231,102,106,0.12); }
+.deleteBtn.confirmState { background:var(--danger); color:#1a1010; font-weight:600; }
